@@ -1,0 +1,10 @@
+target/
+reports/
+screenshots/
+logs/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+*.log
