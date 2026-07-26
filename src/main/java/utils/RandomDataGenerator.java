@@ -41,6 +41,7 @@ public class RandomDataGenerator {
                 payer.setEnglishName("QA Payer " + faker.company().name() + " " + suffix);
                 payer.setArabicName(generateArabicName() + " " + arabicSuffix);
                 payer.setCode("PYR-" + suffix);
+        payer.setLicenseNumber("LIC-" + suffix);
                 payer.setDescription("Automated test payer generated on " + java.time.LocalDate.now() + " - " + faker.lorem().sentence());
                 return payer;
     }
