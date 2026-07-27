@@ -21,7 +21,12 @@ public class PayerFormDialog {
     private final By arabicNameInput = By.cssSelector("input.payer-dialog__input[dir='rtl']");
     private final By payerTypeDropdown = By.cssSelector("p-select.payer-dialog__input");
     private final By emailInput = By.cssSelector("input.payer-dialog__input[placeholder='e.g. email@mail.com']");
-    private final By phoneInput = By.cssSelector("input.payer-dialog__input[placeholder='+9665XXXXXXX']");
+    // The dev team split Phone Number into a dial-code selector and a local-number input
+  // on 27/07/2026. The dial code defaults to "+966", which already matches our Saudi
+  // test data, so we only fill the local-number input; phoneDialCodeDropdown is kept
+  // available below in case a future test needs to change it explicitly.
+  private final By phoneInput = By.cssSelector("input.payer-dialog__input--phone");
+    private final By phoneDialCodeDropdown = By.cssSelector("p-select.payer-dialog__dial-code");
     // Country, City, Preferred Language and Preferred Contact Method are all rendered as
   // <p-select class="payer-dialog__input"> on step 2, exactly like payerTypeDropdown on
   // step 1, so a plain class-based CSS selector cannot tell them apart (there would be
@@ -29,15 +34,15 @@ public class PayerFormDialog {
   // <div class="payer-dialog__field"> together with its <label>, so we scope an XPath by
   // that label text instead. Verified against the live DOM on 27/07/2026.
   private final By licenseNumberInput = By.xpath(
-          "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='License Number']]//input");
+              "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='License Number']]//input");
     private final By countryDropdown = By.xpath(
-            "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='Country']]//p-select");
+                "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='Country']]//p-select");
     private final By cityDropdown = By.xpath(
-            "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='City']]//p-select");
+                "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='City']]//p-select");
     private final By preferredLanguageDropdown = By.xpath(
-            "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='Preferred Language']]//p-select");
+                "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='Preferred Language']]//p-select");
     private final By preferredContactMethodDropdown = By.xpath(
-            "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='Preferred Contact Method']]//p-select");
+                "//div[contains(@class,'payer-dialog__field')][.//label[normalize-space()='Preferred Contact Method']]//p-select");
     private final By dateInputs = By.cssSelector("input.p-datepicker-input");
     private final By todayCell = By.cssSelector("td.p-datepicker-today span.p-datepicker-day");
     private final By primaryButton = By.cssSelector("button.pbm-btn-primary");
@@ -45,41 +50,41 @@ public class PayerFormDialog {
     private final By fieldError = By.cssSelector(".pbm-field-error");
 
   public PayerFormDialog(WebDriver driver) {
-        this.driver = driver;
-        this.actions = new ElementActions(driver);
+          this.driver = driver;
+          this.actions = new ElementActions(driver);
   }
 
   /**
    * Drives the full 3-step wizard to create a brand new payer.
      */
   public void createPayer(Payer payer) {
-        // Step 1: Basic Information
-      actions.type(englishNameInput, payer.getEnglishName());
-        actions.type(arabicNameInput, payer.getArabicName());
-        actions.selectPrimeNgOption(payerTypeDropdown, payer.getPayerType());
-        actions.click(primaryButton);
+          // Step 1: Basic Information
+        actions.type(englishNameInput, payer.getEnglishName());
+          actions.type(arabicNameInput, payer.getArabicName());
+          actions.selectPrimeNgOption(payerTypeDropdown, payer.getPayerType());
+          actions.click(primaryButton);
 
-      // Step 2: Contact Information
-      // NOTE: License Number, Country, City, Preferred Language and Preferred Contact
-      // Method were added here after live QA on 27/07/2026 confirmed the wizard cannot
-      // advance past step 2 without them (they are required fields in the live app but
-      // were previously missing from this method). During that same QA pass, the
-      // Country/City lookup data was observed to be intermittently empty in this
-      // environment - if that recurs, selectPrimeNgOption() below will time out waiting
-      // for a matching option, which should be reported to the backend team as an
-      // environment/data issue rather than a locator problem.
-      actions.type(emailInput, buildEmail(payer));
-        actions.type(phoneInput, "+966500000000");
-        actions.type(licenseNumberInput, "LIC-" + System.currentTimeMillis());
-        actions.selectPrimeNgOption(countryDropdown, payer.getCountry());
-        actions.selectPrimeNgOption(cityDropdown, payer.getCity());
-        actions.selectPrimeNgOption(preferredLanguageDropdown, payer.getPreferredLanguage());
-        actions.selectPrimeNgOption(preferredContactMethodDropdown, payer.getPreferredContactMethod());
-        actions.click(primaryButton);
+        // Step 2: Contact Information
+        // NOTE: License Number, Country, City, Preferred Language and Preferred Contact
+        // Method are required fields here. As of the dev team's 27/07/2026 update, Country
+        // now defaults to a valid value ("Saudi Arabia") as soon as the dialog opens, so
+        // these fields render immediately and the Country/City lookup no longer needs to be
+        // queried with an empty selection. If Country/City ever render empty again,
+        // selectPrimeNgOption() below will time out waiting for a matching option, which
+        // should be reported to the backend team as an environment/data issue rather than
+        // a locator problem.
+        actions.type(emailInput, buildEmail(payer));
+          actions.type(phoneInput, "500000000");
+          actions.type(licenseNumberInput, "LIC-" + System.currentTimeMillis());
+          actions.selectPrimeNgOption(countryDropdown, payer.getCountry());
+          actions.selectPrimeNgOption(cityDropdown, payer.getCity());
+          actions.selectPrimeNgOption(preferredLanguageDropdown, payer.getPreferredLanguage());
+          actions.selectPrimeNgOption(preferredContactMethodDropdown, payer.getPreferredContactMethod());
+          actions.click(primaryButton);
 
-      // Step 3: Effective Period - select today's date for both Effective and Expiry
-      selectTodayForAllDatePickers();
-        actions.click(primaryButton);
+        // Step 3: Effective Period - select today's date for both Effective and Expiry
+        selectTodayForAllDatePickers();
+          actions.click(primaryButton);
   }
 
   /**
@@ -95,31 +100,31 @@ public class PayerFormDialog {
      * method or its locators - call hasValidationErrors() after this method returns
      * and report failures to the dev team rather than treating them as a test defect.
      */
-    public void editNamesOnly(String updatedEnglishName, String updatedArabicName) {
-      actions.type(englishNameInput, updatedEnglishName);
-      actions.type(arabicNameInput, updatedArabicName);
-      actions.click(primaryButton);
-      actions.click(primaryButton);
-      actions.click(primaryButton);
-}
+  public void editNamesOnly(String updatedEnglishName, String updatedArabicName) {
+          actions.type(englishNameInput, updatedEnglishName);
+          actions.type(arabicNameInput, updatedArabicName);
+          actions.click(primaryButton);
+          actions.click(primaryButton);
+          actions.click(primaryButton);
+  }
 
   public boolean hasValidationErrors() {
-        return !driver.findElements(fieldError).isEmpty();
+          return !driver.findElements(fieldError).isEmpty();
   }
 
   public void cancel() {
-        actions.click(cancelButton);
+          actions.click(cancelButton);
   }
 
   private void selectTodayForAllDatePickers() {
-        for (int i = 0; i < driver.findElements(dateInputs).size(); i++) {
-                driver.findElements(dateInputs).get(i).click();
-                WaitUtils.waitForClickable(driver, todayCell).click();
-        }
+          for (int i = 0; i < driver.findElements(dateInputs).size(); i++) {
+                      driver.findElements(dateInputs).get(i).click();
+                      WaitUtils.waitForClickable(driver, todayCell).click();
+          }
   }
 
   private String buildEmail(Payer payer) {
-        String base = payer.getEnglishName().toLowerCase().replaceAll("[^a-z0-9]", "");
-    return base + "@example.com";
-}
+          String base = payer.getEnglishName().toLowerCase().replaceAll("[^a-z0-9]", "");
+          return base + "@example.com";
+  }
 }
